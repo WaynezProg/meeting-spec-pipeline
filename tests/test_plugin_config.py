@@ -21,23 +21,35 @@ def test_plugin_manifest_has_required_identity():
 def test_provider_schema_defines_supported_providers():
     schema = json.loads((PLUGIN / "openclaw.plugin.json").read_text())["configSchema"]
     provider_enum = schema["properties"]["defaultProvider"]["enum"]
-    assert provider_enum == ["groq", "openai", "local", "mock"]
+    assert provider_enum == ["auto", "groq", "openai", "local", "mock"]
     assert "providers" in schema["properties"]
+    assert "fallback" in schema["properties"]
+    assert "costStrategy" in schema["properties"]
     secret_ref = schema["$defs"]["secretRef"]
     assert secret_ref["properties"]["source"]["enum"] == ["env", "file", "exec"]
     assert schema["properties"]["providers"]["properties"]["groq"]["properties"]["apiKey"]["oneOf"][1]["$ref"] == "#/$defs/secretRef"
+    assert schema["properties"]["providers"]["properties"]["groq"]["properties"]["model"]["default"] == "whisper-large-v3-turbo"
+    assert schema["properties"]["providers"]["properties"]["openai"]["properties"]["model"]["default"] == "gpt-4o-mini-transcribe"
+    assert schema["properties"]["providers"]["properties"]["openai"]["properties"]["diarizeModel"]["default"] == "gpt-4o-transcribe-diarize"
 
 
 def test_example_config_contains_no_real_secrets():
     example = json.loads((PLUGIN / "config/openclaw-entry.example.json").read_text())
     config = example["config"]
     assert example["enabled"] is True
-    assert config["defaultProvider"] == "groq"
+    assert config["defaultProvider"] == "auto"
+    assert config["fallback"]["order"] == ["groq", "openai", "local"]
+    assert config["fallback"]["diarizeOrder"] == ["openai", "local"]
+    assert "Groq whisper-large-v3-turbo first" in config["costStrategy"]["default"]
+    assert "Use diarization only" in config["costStrategy"]["diarizePolicy"]
+    assert config["providers"]["groq"]["model"] == "whisper-large-v3-turbo"
     assert config["providers"]["groq"]["apiKey"] == {
         "source": "file",
         "provider": "meeting-transcribe-cloud",
         "id": "/groq/apiKey",
     }
+    assert config["providers"]["openai"]["model"] == "gpt-4o-mini-transcribe"
+    assert config["providers"]["openai"]["diarizeModel"] == "gpt-4o-transcribe-diarize"
     assert config["providers"]["openai"]["apiKey"] == {
         "source": "file",
         "provider": "meeting-transcribe-cloud",

@@ -33,6 +33,12 @@ def test_skill_metadata_forbids_run_all_mode():
     assert metadata["execution_model"]["allow_run_all"] is False
     assert metadata["execution_model"]["human_input_between_stages"] is True
     assert metadata["execution_model"]["resume_source"] == "meeting_manifest.json"
+    assert metadata["templates"]["meeting_context"] == "templates/meeting-context.md"
+    assert metadata["templates"]["questions"] == "templates/questions.md"
+    assert metadata["backend_policy"]["fallback_order"] == ["groq", "openai", "local"]
+    assert metadata["backend_policy"]["groq_model"] == "whisper-large-v3-turbo"
+    assert metadata["backend_policy"]["openai_fallback_model"] == "gpt-4o-mini-transcribe"
+    assert metadata["backend_policy"]["diarize_only_when_needed"] is True
 
 
 def test_prompt_forbids_one_click_pipeline():
@@ -40,6 +46,21 @@ def test_prompt_forbids_one_click_pipeline():
     assert "Never run the whole pipeline automatically" in text
     assert "never use a one-click audio-to-PRD wrapper" in text
     assert "Allow human context or reference files only at stage boundaries" in text
+    assert "Groq first, OpenAI mini fallback, local last" in text
+    assert "enable diarize only when speaker separation is required" in text
+
+
+def test_human_input_templates_exist():
+    meeting_context = (SKILL / "templates/meeting-context.md").read_text()
+    assert "Meeting Context" in meeting_context
+    assert "未提供的欄位填「未知」" in meeting_context
+    assert "姓名 | 部門 | 職稱 / 角色" in meeting_context
+
+    questions = (SKILL / "templates/questions.md").read_text()
+    assert "Questions Output Spec" in questions
+    assert "questions.md" in questions
+    assert "狀態：待確認" in questions
+    assert "預設處理" in questions
 
 
 def test_no_one_click_stage_script_exists():

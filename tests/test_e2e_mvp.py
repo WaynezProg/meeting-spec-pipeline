@@ -68,6 +68,7 @@ def test_end_to_end_mvp_generates_traceable_spec(tmp_path):
         "manifest/meeting_context.json",
         "dialogue/dialogue.md",
         "minutes/meeting_minutes.md",
+        "minutes/questions.md",
         "spec/requirement_spec.md",
         "spec/traceability_matrix.json",
     ]
@@ -105,3 +106,10 @@ def test_readme_is_agent_handoff_document():
     assert "這不是「一鍵錄音變 PRD」黑盒" in readme
     assert "不要一路從錄音跑到需求規格書" in readme
     assert "人工補充插入點固定在 stage boundary" in readme
+    assert "provider=auto" in readme
+    assert "Groq `whisper-large-v3-turbo` 優先" in readme
+    assert "OpenAI `gpt-4o-mini-transcribe`" in readme
+    assert "不要 clone 第三方 Groq Whisper repo" in readme
+    assert "只有需要講者分離時才加" in readme
+    assert "templates/meeting-context.md" in readme
+    assert "minutes/questions.md" in readme

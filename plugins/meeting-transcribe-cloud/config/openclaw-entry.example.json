@@ -1,9 +1,18 @@
 {
   "enabled": true,
   "config": {
-    "defaultProvider": "groq",
+    "defaultProvider": "auto",
+    "fallback": {
+      "order": ["groq", "openai", "local"],
+      "diarizeOrder": ["openai", "local"]
+    },
+    "costStrategy": {
+      "default": "Use Groq whisper-large-v3-turbo first. Fall back to OpenAI gpt-4o-mini-transcribe only when Groq is unavailable or fails.",
+      "diarizePolicy": "Use diarization only when the user asks for speaker separation or the meeting output requires speaker labels."
+    },
     "providers": {
       "groq": {
+        "model": "whisper-large-v3-turbo",
         "apiKey": {
           "source": "file",
           "provider": "meeting-transcribe-cloud",
@@ -11,6 +20,8 @@
         }
       },
       "openai": {
+        "model": "gpt-4o-mini-transcribe",
+        "diarizeModel": "gpt-4o-transcribe-diarize",
         "apiKey": {
           "source": "file",
           "provider": "meeting-transcribe-cloud",

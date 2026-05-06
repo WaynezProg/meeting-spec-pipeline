@@ -20,6 +20,12 @@ def test_transcribe_audio_writes_raw_json_and_markdown(tmp_path):
             200,
             json={
                 "meeting_id": "sample-meeting-audio",
+                "provider": "openai",
+                "model": "gpt-4o-mini-transcribe",
+                "fallback_attempts": [
+                    {"code": "STT_API_FAILED", "message": "groq unavailable", "source_file": "chunk-0001.wav"}
+                ],
+                "diarize": False,
                 "segments": [
                     {
                         "segment_id": "seg-0001",
@@ -42,7 +48,12 @@ def test_transcribe_audio_writes_raw_json_and_markdown(tmp_path):
     raw = json.loads((meeting_root / "transcript/transcript_raw.json").read_text())
     md = (meeting_root / "transcript/transcript.md").read_text()
     assert raw["segments"][0]["text"] == "原始逐字稿內容，不要修飾。"
+    assert raw["provider"] == "openai"
+    assert raw["fallback_attempts"][0]["code"] == "STT_API_FAILED"
     assert "[seg-0001 | 0.0-8.0]" in md
+    manifest = json.loads(Path(manifest_path).read_text())
+    assert manifest["stages"]["transcribe_audio"]["provider"] == "openai"
+    assert manifest["stages"]["transcribe_audio"]["model"] == "gpt-4o-mini-transcribe"
 
 
 def test_transcribe_audio_marks_service_failure(tmp_path):

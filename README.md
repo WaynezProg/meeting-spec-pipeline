@@ -119,9 +119,18 @@ openclaw config set secrets.providers.meeting-transcribe-cloud \
 
 ```bash
 openclaw config set plugins.entries.meeting-transcribe-cloud.config '{
-  "defaultProvider": "groq",
+  "defaultProvider": "auto",
+  "fallback": {
+    "order": ["groq", "openai", "local"],
+    "diarizeOrder": ["openai", "local"]
+  },
+  "costStrategy": {
+    "default": "Use Groq whisper-large-v3-turbo first. Fall back to OpenAI gpt-4o-mini-transcribe only when Groq is unavailable or fails.",
+    "diarizePolicy": "Use diarization only when the user asks for speaker separation or the meeting output requires speaker labels."
+  },
   "providers": {
     "groq": {
+      "model": "whisper-large-v3-turbo",
       "apiKey": {
         "source": "file",
         "provider": "meeting-transcribe-cloud",
@@ -129,6 +138,8 @@ openclaw config set plugins.entries.meeting-transcribe-cloud.config '{
       }
     },
     "openai": {
+      "model": "gpt-4o-mini-transcribe",
+      "diarizeModel": "gpt-4o-transcribe-diarize",
       "apiKey": {
         "source": "file",
         "provider": "meeting-transcribe-cloud",
@@ -153,6 +164,13 @@ openclaw config get plugins.entries.meeting-transcribe-cloud.config
 ```
 
 MVP 測試可用 `mock` provider，不需要雲端 key。
+
+Backend fallback / cost rules：
+
+- 預設用 `provider=auto`：Groq `whisper-large-v3-turbo` 優先，失敗才 fallback 到 OpenAI `gpt-4o-mini-transcribe`，最後才用 `local`。
+- 指定 `--provider groq|openai|local|mock` 時只跑該 backend，不做自動 fallback。
+- 不要 clone 第三方 Groq Whisper repo；Groq / OpenAI 都走官方 `/audio/transcriptions` API。
+- Diarization 預設關閉。只有使用者明確需要講者分離，或會議輸出必須有 speaker labels，才加 `--diarize`，此時走 OpenAI diarize model，避免不必要成本。
 
 ## Start transcribe-service
 
@@ -187,7 +205,13 @@ Stop after the stage completes.
 確認 transcribe-service 已啟動，再執行：
 
 ```bash
-uv run python skills/meeting-spec-pipeline/scripts/transcribe_audio.py "<manifest-path>" --service-url http://127.0.0.1:8765 --provider groq
+uv run python skills/meeting-spec-pipeline/scripts/transcribe_audio.py "<manifest-path>" --service-url http://127.0.0.1:8765 --provider auto
+```
+
+只有需要講者分離時才加：
+
+```bash
+uv run python skills/meeting-spec-pipeline/scripts/transcribe_audio.py "<manifest-path>" --service-url http://127.0.0.1:8765 --provider auto --diarize
 ```
 
 Report these artifact paths:
@@ -208,6 +232,8 @@ Stop after the stage completes.
 是否有主要發言人？
 是否有特定名詞、系統名稱、專案名稱需要注意？
 ```
+
+可先用模板整理：`skills/meeting-spec-pipeline/templates/meeting-context.md`。
 
 把使用者答案存成 JSON 後執行：
 
@@ -266,6 +292,7 @@ Report these artifact paths:
 - `workdir/{meeting_id}/minutes/meeting_minutes.md`
 - `workdir/{meeting_id}/minutes/action_items.json`
 - `workdir/{meeting_id}/minutes/open_questions.json`
+- `workdir/{meeting_id}/minutes/questions.md`
 
 Stop after the stage completes.
 
@@ -320,6 +347,6 @@ uv run python skills/meeting-spec-pipeline/scripts/validate_outputs.py "workdir/
 
 - 找不到音檔：請使用者提供正確路徑。
 - 多個候選音檔：列出候選檔，請使用者選一個。
-- STT 失敗：回報 provider error，不改用其他 provider，除非使用者同意。
+- STT 失敗：`provider=auto` 時依 fallback order 嘗試下一個 backend，並在 `transcript_raw.json` 記錄 `fallback_attempts`；指定單一 provider 時不 fallback。
 - 參考文件無法讀取：記錄 unreadable，繼續處理可讀文件。
 - 產物缺章節：執行 validator，修正後再回報完成。

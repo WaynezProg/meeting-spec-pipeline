@@ -20,10 +20,11 @@ def _write_transcript_markdown(path: Path, segments: list[dict[str, Any]]) -> No
 def transcribe_audio(
     manifest_path: str | Path,
     service_url: str,
-    provider: str = "groq",
+    provider: str = "auto",
     language: str = "zh",
     enable_chunking: bool = True,
     chunk_minutes: int = 10,
+    diarize: bool = False,
     client: httpx.Client | None = None,
 ) -> dict[str, Any]:
     manifest_file = Path(manifest_path)
@@ -46,6 +47,7 @@ def transcribe_audio(
                 "language": language,
                 "enable_chunking": enable_chunking,
                 "chunk_minutes": chunk_minutes,
+                "diarize": diarize,
             },
         )
         if response.status_code >= 400:
@@ -69,6 +71,10 @@ def transcribe_audio(
                 "output_artifacts": ["transcript/transcript_raw.json", "transcript/transcript.md"],
                 "completed_at": utc_now(),
                 "errors": payload.get("errors", []),
+                "provider": payload.get("provider", provider),
+                "model": payload.get("model"),
+                "fallback_attempts": payload.get("fallback_attempts", []),
+                "diarize": payload.get("diarize", diarize),
             }
         )
         write_json(manifest_file, manifest)
@@ -82,13 +88,22 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("manifest_path")
     parser.add_argument("--service-url", required=True)
-    parser.add_argument("--provider", default="groq")
+    parser.add_argument("--provider", default="auto")
     parser.add_argument("--language", default="zh")
     parser.add_argument("--chunk-minutes", type=int, default=10)
+    parser.add_argument("--diarize", action="store_true")
     args = parser.parse_args()
     print(
         json.dumps(
-            transcribe_audio(args.manifest_path, args.service_url, args.provider, args.language, True, args.chunk_minutes),
+            transcribe_audio(
+                args.manifest_path,
+                args.service_url,
+                args.provider,
+                args.language,
+                True,
+                args.chunk_minutes,
+                args.diarize,
+            ),
             ensure_ascii=False,
             indent=2,
         )

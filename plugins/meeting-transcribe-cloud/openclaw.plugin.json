@@ -30,7 +30,39 @@
     "properties": {
       "defaultProvider": {
         "type": "string",
-        "enum": ["groq", "openai", "local", "mock"]
+        "enum": ["auto", "groq", "openai", "local", "mock"]
+      },
+      "fallback": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "order": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["groq", "openai", "local", "mock"]
+            }
+          },
+          "diarizeOrder": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["openai", "local"]
+            }
+          }
+        }
+      },
+      "costStrategy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "default": {
+            "type": "string"
+          },
+          "diarizePolicy": {
+            "type": "string"
+          }
+        }
       },
       "providers": {
         "type": "object",
@@ -40,6 +72,10 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "model": {
+                "type": "string",
+                "default": "whisper-large-v3-turbo"
+              },
               "apiKey": {
                 "oneOf": [
                   {"type": "string", "minLength": 1},
@@ -52,6 +88,14 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "model": {
+                "type": "string",
+                "default": "gpt-4o-mini-transcribe"
+              },
+              "diarizeModel": {
+                "type": "string",
+                "default": "gpt-4o-transcribe-diarize"
+              },
               "apiKey": {
                 "oneOf": [
                   {"type": "string", "minLength": 1},

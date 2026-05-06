@@ -43,6 +43,25 @@ MINUTES_TEMPLATE = """# 會議記錄
 """
 
 
+def _write_questions_markdown(path: Path, questions: list[dict[str, Any]]) -> None:
+    lines = ["# Questions", "", "## 待確認", ""]
+    for index, item in enumerate(questions, start=1):
+        sources = "、".join(item.get("sources", [])) or "無"
+        lines.extend(
+            [
+                f"### Q-{index:03d}: {item['title']}",
+                f"- 狀態：{item['status']}",
+                f"- 影響階段：{item['blocked_stage']}",
+                f"- 問題：{item['question']}",
+                f"- 為何需要：{item['reason']}",
+                f"- 目前依據：{sources}",
+                f"- 預設處理：{item['default_handling']}",
+                "",
+            ]
+        )
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
 def generate_meeting_minutes(manifest_path: str | Path) -> dict[str, Any]:
     manifest_file = Path(manifest_path)
     manifest = load_json(manifest_file)
@@ -63,21 +82,29 @@ def generate_meeting_minutes(manifest_path: str | Path) -> dict[str, Any]:
             ]
         },
     )
-    write_json(
-        root / "minutes/open_questions.json",
+    questions = [
         {
-            "questions": [
-                {
-                    "question": "API 欄位如何定義？",
-                    "sources": ["dlg-0002", "seg-0002"],
-                }
-            ]
-        },
-    )
+            "id": "Q-001",
+            "title": "API 欄位定義",
+            "status": "待確認",
+            "blocked_stage": "generate_requirement_spec",
+            "question": "API 欄位如何定義？",
+            "reason": "功能需求與系統整合章節需要明確欄位來源，不能自行補不存在的 API 欄位。",
+            "sources": ["dlg-0002", "seg-0002"],
+            "default_handling": "在需求規格書第 13 章列為待確認，相關章節寫待補充。",
+        }
+    ]
+    write_json(root / "minutes/open_questions.json", {"questions": questions})
+    _write_questions_markdown(root / "minutes/questions.md", questions)
     manifest["stages"]["generate_meeting_minutes"].update(
         {
             "status": "completed",
-            "output_artifacts": ["minutes/meeting_minutes.md", "minutes/action_items.json", "minutes/open_questions.json"],
+            "output_artifacts": [
+                "minutes/meeting_minutes.md",
+                "minutes/action_items.json",
+                "minutes/open_questions.json",
+                "minutes/questions.md",
+            ],
             "completed_at": utc_now(),
         }
     )

@@ -8,6 +8,18 @@
     "human_input_between_stages": true,
     "resume_source": "meeting_manifest.json"
   },
+  "templates": {
+    "meeting_context": "templates/meeting-context.md",
+    "questions": "templates/questions.md"
+  },
+  "backend_policy": {
+    "default_provider": "auto",
+    "fallback_order": ["groq", "openai", "local"],
+    "groq_model": "whisper-large-v3-turbo",
+    "openai_fallback_model": "gpt-4o-mini-transcribe",
+    "diarize_only_when_needed": true,
+    "diarize_order": ["openai", "local"]
+  },
   "stages": [
     "locate_audio_file",
     "transcribe_audio",

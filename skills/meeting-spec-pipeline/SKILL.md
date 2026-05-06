@@ -14,11 +14,11 @@ Do not run every stage automatically. 每個 stage 完成後停止, report artif
 Stage order:
 
 1. `locate_audio_file`: ask only where the audio file or folder is.
-2. `transcribe_audio`: call transcribe-service; do not call Groq/OpenAI/local Whisper directly.
-3. `ask_meeting_context`: ask meeting topic, participants, departments/titles/roles, primary speakers, and terms.
+2. `transcribe_audio`: call transcribe-service; use `provider=auto` unless the user explicitly selects a backend.
+3. `ask_meeting_context`: ask meeting topic, participants, departments/titles/roles, primary speakers, and terms. Use `templates/meeting-context.md` when the user needs structure.
 4. `generate_dialogue`: use transcript and context; unknown speaker is `未知發言者`.
 5. `ask_meeting_reference`: ask for quick notes, slides, diagrams, screenshots, docs, discussions, or handwritten notes.
-6. `generate_meeting_minutes`: create formal minutes and unresolved questions.
+6. `generate_meeting_minutes`: create formal minutes and unresolved questions; unresolved questions must also be written to `minutes/questions.md` using `templates/questions.md`.
 7. `ask_spec_reference`: ask for old specs, API, DB, screens, permissions, rules, flows, errors, tests, audit rules.
 8. `generate_requirement_spec`: create fixed-section spec and traceability matrix.
 
@@ -31,3 +31,5 @@ Rules:
 - 若依上下文推論，必須標示「推論，待確認」。
 - Preserve `meeting_manifest.json` and never overwrite raw transcript semantics.
 - If the user asks to continue, run only the next stage implied by `meeting_manifest.json`.
+- Backend cost strategy: Groq `whisper-large-v3-turbo` first, OpenAI `gpt-4o-mini-transcribe` fallback, local last. Do not clone third-party STT repos.
+- Diarization is off by default. Use it only when the user needs speaker separation; then use the diarize order instead of paying for diarization by default.

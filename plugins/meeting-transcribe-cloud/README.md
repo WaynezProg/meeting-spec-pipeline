@@ -33,9 +33,18 @@ Configure provider credentials through `plugins.entries.meeting-transcribe-cloud
 
 ```bash
 openclaw config set plugins.entries.meeting-transcribe-cloud.config '{
-  "defaultProvider": "groq",
+  "defaultProvider": "auto",
+  "fallback": {
+    "order": ["groq", "openai", "local"],
+    "diarizeOrder": ["openai", "local"]
+  },
+  "costStrategy": {
+    "default": "Use Groq whisper-large-v3-turbo first. Fall back to OpenAI gpt-4o-mini-transcribe only when Groq is unavailable or fails.",
+    "diarizePolicy": "Use diarization only when the user asks for speaker separation or the meeting output requires speaker labels."
+  },
   "providers": {
     "groq": {
+      "model": "whisper-large-v3-turbo",
       "apiKey": {
         "source": "file",
         "provider": "meeting-transcribe-cloud",
@@ -43,6 +52,8 @@ openclaw config set plugins.entries.meeting-transcribe-cloud.config '{
       }
     },
     "openai": {
+      "model": "gpt-4o-mini-transcribe",
+      "diarizeModel": "gpt-4o-transcribe-diarize",
       "apiKey": {
         "source": "file",
         "provider": "meeting-transcribe-cloud",
@@ -61,5 +72,7 @@ openclaw config set plugins.entries.meeting-transcribe-cloud.config '{
 }' --strict-json
 openclaw config validate --json
 ```
+
+Fallback is only automatic for `provider=auto`: Groq first, OpenAI mini fallback, local last. Diarization stays off unless the user needs speaker separation.
 
 The Skill controls workflow stages. This plugin only owns provider selection and credential references.

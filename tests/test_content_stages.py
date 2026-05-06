@@ -72,6 +72,10 @@ def test_content_stages_generate_required_artifacts(tmp_path):
     minutes_result = generate_meeting_minutes(manifest_path)
     assert minutes_result["status"] == "completed"
     assert "## 待確認事項" in (meeting_root / "minutes/meeting_minutes.md").read_text()
+    questions_md = (meeting_root / "minutes/questions.md").read_text()
+    assert "### Q-001: API 欄位定義" in questions_md
+    assert "- 狀態：待確認" in questions_md
+    assert "- 目前依據：dlg-0002、seg-0002" in questions_md
 
     spec_ref = collect_references(manifest_path, "spec", [str(FIXTURES / "spec_reference.txt")])
     assert spec_ref["status"] == "completed"

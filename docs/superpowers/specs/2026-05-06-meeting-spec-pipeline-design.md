@@ -20,12 +20,12 @@
 
 - 建立 repo-local project，內含 OpenClaw Skill、Plugin scaffold、transcribe-service 範例實作、prompt templates、schemas、測試與 README。
 - MVP 支援 mock provider，讓 end-to-end test 不需要真 API key。
-- Plugin 設計支援 `groq`、`openai`、`local` provider config，預設 provider 為 `groq`。
+- Plugin 設計支援 `auto`、`groq`、`openai`、`local`、`mock` provider config；成本策略預設為 Groq 優先、OpenAI mini fallback、local 最後。
 - Skill 以 command / script 形式提供每個 stage：可單獨執行、可檢查狀態、可重跑。
 
 ### Out of Scope
 
-- 不實作完整 speaker diarization；MVP 只做基於 context 的 speaker assignment，無法判斷時標示「未知發言者」。
+- Diarization 不預設啟用；只有使用者需要講者分離時，才使用 diarize backend。一般情境仍用 meeting context 做 speaker assignment，無法判斷時標示「未知發言者」。
 - 不保證真實雲端 STT API 在無 API key 下可跑；真 API path 會有 adapter 與錯誤處理，測試以 mock provider 覆蓋。
 - 不把 OpenClaw gateway 設成必要的測試依賴；repo tests 先驗證 Skill/Plugin artifact 與 CLI behavior。
 
@@ -387,8 +387,9 @@ Response:
 Provider adapter contract:
 
 - `provider = mock`: 回傳 deterministic fixture segments。
-- `provider = groq`: 使用 `GROQ_API_KEY`。
-- `provider = openai`: 使用 `OPENAI_API_KEY`。
+- `provider = auto`: 依序嘗試 Groq `whisper-large-v3-turbo`、OpenAI `gpt-4o-mini-transcribe`、local。
+- `provider = groq`: 使用 OpenClaw SecretRef 解析 Groq key，呼叫官方 `/audio/transcriptions` API。
+- `provider = openai`: 使用 OpenClaw SecretRef 解析 OpenAI key，呼叫官方 `/audio/transcriptions` API。
 - `provider = local`: 呼叫本機 Whisper command 或 local HTTP endpoint，設定放在 plugin config。
 
 API key 不寫進 repo，不寫進 prompt，不寫進 transcript artifact。
@@ -434,5 +435,5 @@ API key 不寫進 repo，不寫進 prompt，不寫進 transcript artifact。
 
 ## Implementation Decisions
 
-- MVP 的 provider 設定以 repo-local `plugins/meeting-transcribe-cloud/config/provider.local.json` 為本機 runtime config；此檔放入 `.gitignore`，README 說明如何填 API key。後續若要安裝進 OpenClaw runtime config，再以本機 `openclaw config` 實測補 installer。
-- local Whisper provider 第一版使用 command adapter，設定 `LOCAL_WHISPER_COMMAND`；若未設定就回傳明確錯誤，不 fallback 到其他 provider。
+- Provider 設定使用 OpenClaw `secrets.providers.meeting-transcribe-cloud` + `plugins.entries.meeting-transcribe-cloud.config`；不再使用 repo-local `provider.local.json`。
+- local Whisper provider 使用 command adapter；`provider=auto` 只有在 Groq / OpenAI 失敗後才 fallback 到 local，指定單一 provider 時不 fallback。
