@@ -86,6 +86,9 @@ def test_readme_is_agent_handoff_document():
     assert "Agent Execution Contract" in readme
     assert "Do Not" in readme
     assert "Stage Gate Protocol" in readme
+    assert "Fresh Clone Install" in readme
+    assert "git clone https://github.com/WaynezProg/meeting-spec-pipeline.git" in readme
+    assert "cd meeting-spec-pipeline" in readme
     assert "Stop after the stage completes" in readme
     assert "Report these artifact paths" in readme
     assert "Plugin 是 cloud/config/runtime surface" in readme

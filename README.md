@@ -42,7 +42,29 @@ Stop after the stage completes.
 
 如果 status 是 `needs_input`，只問當前 stage 缺的資料。不要推進下一 stage。
 
+## Fresh Clone Install
+
+如果你是從 GitHub 看到這份 README，先 clone repo，再把 Skill 複製到 OpenClaw workspace：
+
+```bash
+git clone https://github.com/WaynezProg/meeting-spec-pipeline.git
+cd meeting-spec-pipeline
+cp -R skills/meeting-spec-pipeline ~/.openclaw/workspace/skills/meeting-spec-pipeline
+openclaw skills info meeting-spec-pipeline --agent main
+```
+
+成功條件：
+
+```text
+Visible to model: yes
+Available as command: yes
+```
+
+完成後停下來，回報 skill visibility，不要直接開始處理會議錄音。
+
 ## Install Skill Into OpenClaw
+
+如果你已經在 repo 根目錄：
 
 ```bash
 cp -R skills/meeting-spec-pipeline ~/.openclaw/workspace/skills/meeting-spec-pipeline
