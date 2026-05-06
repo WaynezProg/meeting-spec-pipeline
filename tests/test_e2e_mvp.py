@@ -89,6 +89,13 @@ def test_readme_is_agent_handoff_document():
     assert "Fresh Clone Install" in readme
     assert "git clone https://github.com/WaynezProg/meeting-spec-pipeline.git" in readme
     assert "cd meeting-spec-pipeline" in readme
+    assert "python3 scripts/install_openclaw.py" in readme
+    assert "openclaw plugins inspect meeting-transcribe-cloud --json" in readme
+    assert "secrets.providers.meeting-transcribe-cloud" in readme
+    assert "plugins.entries.meeting-transcribe-cloud.config" in readme
+    assert "source\": \"file\"" in readme
+    assert "openclaw config validate --json" in readme
+    assert "export GROQ_API_KEY" not in readme
     assert "Stop after the stage completes" in readme
     assert "Report these artifact paths" in readme
     assert "Plugin 是 cloud/config/runtime surface" in readme

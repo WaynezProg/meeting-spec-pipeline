@@ -49,7 +49,10 @@ Stop after the stage completes.
 ```bash
 git clone https://github.com/WaynezProg/meeting-spec-pipeline.git
 cd meeting-spec-pipeline
-cp -R skills/meeting-spec-pipeline ~/.openclaw/workspace/skills/meeting-spec-pipeline
+python3 scripts/install_openclaw.py
+openclaw config validate --json
+openclaw plugins registry --refresh
+openclaw plugins inspect meeting-transcribe-cloud --json
 openclaw skills info meeting-spec-pipeline --agent main
 ```
 
@@ -67,7 +70,10 @@ Available as command: yes
 如果你已經在 repo 根目錄：
 
 ```bash
-cp -R skills/meeting-spec-pipeline ~/.openclaw/workspace/skills/meeting-spec-pipeline
+python3 scripts/install_openclaw.py
+openclaw config validate --json
+openclaw plugins registry --refresh
+openclaw plugins inspect meeting-transcribe-cloud --json
 openclaw skills info meeting-spec-pipeline --agent main
 ```
 
@@ -80,18 +86,61 @@ Available as command: yes
 
 ## Configure Provider
 
-Plugin 只放 provider 設定，不放流程邏輯。不要把 real API key commit 進 repo。
+Plugin 只放 provider 設定，不放流程邏輯。不要把 real API key commit 進 repo，也不要用 shell `export` 當安裝步驟。
+
+先建立 OpenClaw 管理的 secret file：
 
 ```bash
-cp plugins/meeting-transcribe-cloud/config/provider.example.json plugins/meeting-transcribe-cloud/config/provider.local.json
+install -d -m 700 ~/.openclaw/secrets
+cp plugins/meeting-transcribe-cloud/config/meeting-transcribe-cloud.secrets.example.json ~/.openclaw/secrets/meeting-transcribe-cloud.json
+chmod 600 ~/.openclaw/secrets/meeting-transcribe-cloud.json
+$EDITOR ~/.openclaw/secrets/meeting-transcribe-cloud.json
 ```
 
-使用環境變數：
+再把這個 secret file 註冊成 OpenClaw secret provider：
 
 ```bash
-export GROQ_API_KEY="..."
-export OPENAI_API_KEY="..."
-export LOCAL_WHISPER_COMMAND="..."
+openclaw config set secrets.providers.meeting-transcribe-cloud \
+  --provider-source file \
+  --provider-path ~/.openclaw/secrets/meeting-transcribe-cloud.json \
+  --provider-mode json
+```
+
+最後設定 plugin entry。這裡只保存 SecretRef，不保存 real API key：
+
+```bash
+openclaw config set plugins.entries.meeting-transcribe-cloud.config '{
+  "defaultProvider": "groq",
+  "providers": {
+    "groq": {
+      "apiKey": {
+        "source": "file",
+        "provider": "meeting-transcribe-cloud",
+        "id": "/groq/apiKey"
+      }
+    },
+    "openai": {
+      "apiKey": {
+        "source": "file",
+        "provider": "meeting-transcribe-cloud",
+        "id": "/openai/apiKey"
+      }
+    },
+    "local": {
+      "command": {
+        "source": "file",
+        "provider": "meeting-transcribe-cloud",
+        "id": "/local/command"
+      }
+    },
+    "mock": {}
+  }
+}' --strict-json
+openclaw config validate --json
+```
+
+```bash
+openclaw config get plugins.entries.meeting-transcribe-cloud.config
 ```
 
 MVP 測試可用 `mock` provider，不需要雲端 key。

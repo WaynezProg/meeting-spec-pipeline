@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from .config import ConfigError, get_plugin_config, load_openclaw_config, resolve_provider_field
 from .schemas import Segment
 
 
@@ -11,7 +12,25 @@ class ProviderError(RuntimeError):
         self.message = message
 
 
+def _resolve_api_key(openclaw_config: dict, config: dict, provider: str, env_name: str) -> str | None:
+    try:
+        configured = resolve_provider_field(config, provider, "apiKey", openclaw_config)
+    except ConfigError as exc:
+        raise ProviderError(exc.code, exc.message) from exc
+    return configured or os.getenv(env_name)
+
+
+def _resolve_local_command(openclaw_config: dict, config: dict) -> str | None:
+    try:
+        configured = resolve_provider_field(config, "local", "command", openclaw_config)
+    except ConfigError as exc:
+        raise ProviderError(exc.code, exc.message) from exc
+    return configured or os.getenv("LOCAL_WHISPER_COMMAND")
+
+
 def transcribe_with_provider(provider: str, audio_path: Path, language: str) -> list[Segment]:
+    openclaw_config = load_openclaw_config()
+    config = get_plugin_config(openclaw_config)
     if provider == "mock":
         return [
             Segment(
@@ -32,15 +51,15 @@ def transcribe_with_provider(provider: str, audio_path: Path, language: str) -> 
             ),
         ]
     if provider == "groq":
-        if not os.getenv("GROQ_API_KEY"):
+        if not _resolve_api_key(openclaw_config, config, "groq", "GROQ_API_KEY"):
             raise ProviderError("MISSING_API_KEY", "GROQ_API_KEY is required for groq provider")
         raise ProviderError("PROVIDER_NOT_IMPLEMENTED", "groq adapter boundary is defined but not implemented in MVP")
     if provider == "openai":
-        if not os.getenv("OPENAI_API_KEY"):
+        if not _resolve_api_key(openclaw_config, config, "openai", "OPENAI_API_KEY"):
             raise ProviderError("MISSING_API_KEY", "OPENAI_API_KEY is required for openai provider")
         raise ProviderError("PROVIDER_NOT_IMPLEMENTED", "openai adapter boundary is defined but not implemented in MVP")
     if provider == "local":
-        if not os.getenv("LOCAL_WHISPER_COMMAND"):
+        if not _resolve_local_command(openclaw_config, config):
             raise ProviderError("MISSING_LOCAL_COMMAND", "LOCAL_WHISPER_COMMAND is required for local provider")
         raise ProviderError("PROVIDER_NOT_IMPLEMENTED", "local adapter boundary is defined but not implemented in MVP")
     raise ProviderError("UNSUPPORTED_PROVIDER", f"Unsupported provider: {provider}")

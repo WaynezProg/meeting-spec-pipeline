@@ -1,0 +1,30 @@
+{
+  "enabled": true,
+  "config": {
+    "defaultProvider": "groq",
+    "providers": {
+      "groq": {
+        "apiKey": {
+          "source": "file",
+          "provider": "meeting-transcribe-cloud",
+          "id": "/groq/apiKey"
+        }
+      },
+      "openai": {
+        "apiKey": {
+          "source": "file",
+          "provider": "meeting-transcribe-cloud",
+          "id": "/openai/apiKey"
+        }
+      },
+      "local": {
+        "command": {
+          "source": "file",
+          "provider": "meeting-transcribe-cloud",
+          "id": "/local/command"
+        }
+      },
+      "mock": {}
+    }
+  }
+}

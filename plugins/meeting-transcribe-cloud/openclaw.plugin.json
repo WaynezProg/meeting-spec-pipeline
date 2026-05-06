@@ -1,0 +1,84 @@
+{
+  "id": "meeting-transcribe-cloud",
+  "name": "Meeting Transcribe Cloud",
+  "version": "0.1.0",
+  "description": "OpenClaw plugin config surface for meeting audio transcription providers.",
+  "entry": "index.js",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "$defs": {
+      "secretRef": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "provider", "id"],
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": ["env", "file", "exec"]
+          },
+          "provider": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "required": ["defaultProvider", "providers"],
+    "properties": {
+      "defaultProvider": {
+        "type": "string",
+        "enum": ["groq", "openai", "local", "mock"]
+      },
+      "providers": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "groq": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "apiKey": {
+                "oneOf": [
+                  {"type": "string", "minLength": 1},
+                  {"$ref": "#/$defs/secretRef"}
+                ]
+              }
+            }
+          },
+          "openai": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "apiKey": {
+                "oneOf": [
+                  {"type": "string", "minLength": 1},
+                  {"$ref": "#/$defs/secretRef"}
+                ]
+              }
+            }
+          },
+          "local": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "command": {
+                "oneOf": [
+                  {"type": "string", "minLength": 1},
+                  {"$ref": "#/$defs/secretRef"}
+                ]
+              }
+            }
+          },
+          "mock": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {}
+          }
+        }
+      }
+    }
+  }
+}
