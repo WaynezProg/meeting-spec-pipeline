@@ -32,9 +32,20 @@ def write_config(path: Path, config: dict[str, Any], dry_run: bool) -> None:
         return
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
-        backup = path.with_suffix(path.suffix + ".meeting-spec-pipeline.bak")
+        backup = next_backup_path(path)
         shutil.copy2(path, backup)
     path.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def next_backup_path(path: Path) -> Path:
+    base = path.with_suffix(path.suffix + ".meeting-spec-pipeline.bak")
+    if not base.exists():
+        return base
+    for index in range(1, 1000):
+        candidate = path.with_suffix(path.suffix + f".meeting-spec-pipeline.bak.{index}")
+        if not candidate.exists():
+            return candidate
+    raise RuntimeError(f"Too many backup files for {path}")
 
 
 def install_skill(repo_root: Path, openclaw_home: Path, dry_run: bool) -> Path:

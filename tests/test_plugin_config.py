@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins/meeting-transcribe-cloud"
 sys.path.insert(0, str(ROOT / "scripts"))
-from install_openclaw import patch_plugin_config  # noqa: E402
+from install_openclaw import next_backup_path, patch_plugin_config  # noqa: E402
 
 
 def test_plugin_manifest_has_required_identity():
@@ -111,3 +111,11 @@ def test_install_helper_preserves_existing_plugin_config(tmp_path):
 
     assert patched["plugins"]["entries"]["meeting-transcribe-cloud"]["enabled"] is True
     assert patched["plugins"]["entries"]["meeting-transcribe-cloud"]["config"] == existing_config
+
+
+def test_install_helper_does_not_overwrite_existing_backup(tmp_path):
+    config_path = tmp_path / "openclaw.json"
+    first_backup = tmp_path / "openclaw.json.meeting-spec-pipeline.bak"
+    first_backup.write_text("existing backup", encoding="utf-8")
+
+    assert next_backup_path(config_path) == tmp_path / "openclaw.json.meeting-spec-pipeline.bak.1"
