@@ -83,6 +83,11 @@ def test_end_to_end_mvp_generates_traceable_spec(tmp_path):
 def test_readme_is_agent_handoff_document():
     readme = (ROOT / "README.md").read_text()
     assert "OpenClaw Agent Handoff" in readme
+    assert "Agent Execution Contract" in readme
+    assert "Do Not" in readme
+    assert "Stage Gate Protocol" in readme
+    assert "Stop after the stage completes" in readme
+    assert "Report these artifact paths" in readme
     assert "Plugin 是 cloud/config/runtime surface" in readme
     assert "Skill 是 stage workflow" in readme
     assert "transcribe-service" in readme
