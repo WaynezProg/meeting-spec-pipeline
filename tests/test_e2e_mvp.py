@@ -102,3 +102,6 @@ def test_readme_is_agent_handoff_document():
     assert "Skill 是 stage workflow" in readme
     assert "transcribe-service" in readme
     assert "每個 stage 可暫停" in readme
+    assert "這不是「一鍵錄音變 PRD」黑盒" in readme
+    assert "不要一路從錄音跑到需求規格書" in readme
+    assert "人工補充插入點固定在 stage boundary" in readme

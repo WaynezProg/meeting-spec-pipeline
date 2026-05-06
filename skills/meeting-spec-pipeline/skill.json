@@ -2,6 +2,12 @@
   "name": "meeting-spec-pipeline",
   "version": "0.1.0",
   "description": "Pauseable meeting audio to requirement spec workflow.",
+  "execution_model": {
+    "mode": "stage_gated",
+    "allow_run_all": false,
+    "human_input_between_stages": true,
+    "resume_source": "meeting_manifest.json"
+  },
   "stages": [
     "locate_audio_file",
     "transcribe_audio",

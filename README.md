@@ -12,11 +12,14 @@
 
 ## Agent Execution Contract
 
-每次只執行一個 stage。每個 stage 可暫停，完成後停止，回報產物路徑與下一個 stage 需要問使用者的問題。
+每次只執行一個 stage。每個 stage 可暫停、可重跑、可插入人工補充；完成後停止，回報產物路徑與下一個 stage 需要問使用者的問題。
+
+這不是「一鍵錄音變 PRD」黑盒。不要建立或呼叫 `run_all`、`one_click`、`audio_to_prd` 這類包裝入口。使用者說「繼續」時，也只能依 `meeting_manifest.json` 推進下一個 stage。
 
 Do Not：
 
 - 不要一次問完所有背景、參考文件、規格資料。
+- 不要一路從錄音跑到需求規格書。
 - 不要跳過 `meeting_manifest.json` 或覆蓋原始逐字稿。
 - 不要自行補 API、DB 欄位、系統名稱、權限規則、流程。
 
@@ -41,6 +44,12 @@ Stop after the stage completes.
 ```
 
 如果 status 是 `needs_input`，只問當前 stage 缺的資料。不要推進下一 stage。
+
+人工補充插入點固定在 stage boundary：
+
+- `ask_meeting_context`：逐字稿轉對話稿前。
+- `ask_meeting_reference`：對話稿轉會議記錄前。
+- `ask_spec_reference`：會議記錄轉需求規格書前。
 
 ## Fresh Clone Install
 
