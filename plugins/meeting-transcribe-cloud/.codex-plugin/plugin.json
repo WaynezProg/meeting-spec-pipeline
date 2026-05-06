@@ -1,0 +1,10 @@
+{
+  "name": "meeting-transcribe-cloud",
+  "version": "0.1.0",
+  "description": "Provider configuration surface for meeting audio transcription services.",
+  "interface": {
+    "displayName": "Meeting Transcribe Cloud",
+    "shortDescription": "Configure Groq, OpenAI, local, or mock STT providers.",
+    "defaultPrompt": "Configure the transcription provider before running meeting-spec-pipeline transcribe_audio."
+  }
+}
