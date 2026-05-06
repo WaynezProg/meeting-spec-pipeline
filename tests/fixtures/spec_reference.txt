@@ -1,0 +1,4 @@
+既有規格片段：
+- 後台使用者需登入。
+- 需求單狀態至少包含 draft、reviewing、approved。
+- API 欄位尚未定義。

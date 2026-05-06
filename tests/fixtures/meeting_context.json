@@ -1,0 +1,19 @@
+{
+  "topic": "AI 需求訪談流程整理",
+  "participants": [
+    {
+      "name": "王小明",
+      "department": "業務部",
+      "title": "業務代表",
+      "role": "提出需求"
+    },
+    {
+      "name": "李美華",
+      "department": "資訊部",
+      "title": "系統分析師",
+      "role": "釐清系統限制"
+    }
+  ],
+  "primary_speakers": ["王小明", "李美華"],
+  "terms": ["需求單", "後台審核", "AI 摘要"]
+}

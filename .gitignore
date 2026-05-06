@@ -1,1 +1,10 @@
 .worktrees/
+.DS_Store
+.pytest_cache/
+.ruff_cache/
+.venv/
+__pycache__/
+*.pyc
+workdir/
+plugins/meeting-transcribe-cloud/config/provider.local.json
+skills/meeting-spec-pipeline/workdir/
