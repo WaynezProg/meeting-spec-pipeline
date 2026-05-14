@@ -31,5 +31,6 @@ Rules:
 - 若依上下文推論，必須標示「推論，待確認」。
 - Preserve `meeting_manifest.json` and never overwrite raw transcript semantics.
 - If the user asks to continue, run only the next stage implied by `meeting_manifest.json`.
-- Backend cost strategy: Groq `whisper-large-v3-turbo` first, OpenAI `gpt-4o-mini-transcribe` fallback, local last. Do not clone third-party STT repos.
+- Backend cost strategy: Groq `whisper-large-v3-turbo` first, OpenAI `gpt-4o-mini-transcribe` fallback, local STT queue last. Do not clone third-party STT repos.
+- Local fallback should call `scripts/stt_queue_transcribe.py`, which submits audio to the Mac Mini STT queue and prints JSON for the existing local provider adapter.
 - Diarization is off by default. Use it only when the user needs speaker separation; then use the diarize order instead of paying for diarization by default.

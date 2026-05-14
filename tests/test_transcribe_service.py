@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import httpx
@@ -254,6 +255,75 @@ def test_auto_provider_falls_back_from_groq_to_openai_mini(monkeypatch, tmp_path
     assert result.segments[0].text == "openai fallback transcript"
     assert result.segments[0].end == 12.0
     assert result.fallback_attempts[0].code == "STT_API_FAILED"
+
+
+def test_auto_provider_falls_back_to_local_stt_queue_command(monkeypatch, tmp_path):
+    audio = FIXTURES / "sample_meeting_audio.wav"
+    local_command = tmp_path / "stt_queue_command.py"
+    local_command.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+
+print(json.dumps({
+    "text": "local queue transcript",
+    "provider": "local-stt-queue",
+    "model": "large-v3-turbo-q5_0",
+    "audio_path": sys.argv[1],
+}))
+""",
+        encoding="utf-8",
+    )
+    local_command.chmod(0o755)
+    secret_file = tmp_path / "meeting-transcribe-cloud.json"
+    secret_file.write_text(
+        json.dumps({"local": {"command": f"{local_command} {{audio_path}} --language {{language}}"}}),
+        encoding="utf-8",
+    )
+    config_path = tmp_path / "openclaw.json"
+    config_path.write_text(
+        f"""
+{{
+  "secrets": {{
+    "providers": {{
+      "meeting-transcribe-cloud": {{
+        "source": "file",
+        "path": "{secret_file}",
+        "mode": "json"
+      }}
+    }}
+  }},
+  "plugins": {{
+    "entries": {{
+      "meeting-transcribe-cloud": {{
+        "enabled": true,
+        "config": {{
+          "defaultProvider": "auto",
+          "fallback": {{
+            "order": ["groq", "openai", "local"],
+            "diarizeOrder": ["openai", "local"]
+          }},
+          "providers": {{
+            "local": {{
+              "command": {{"source": "file", "provider": "meeting-transcribe-cloud", "id": "/local/command"}}
+            }}
+          }}
+        }}
+      }}
+    }}
+  }}
+}}
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("OPENCLAW_CONFIG_FILE", str(config_path))
+
+    result = transcribe_with_provider("auto", audio, "zh")
+
+    assert result.provider == "local"
+    assert result.model == "local-command"
+    assert result.segments[0].text == "local queue transcript"
+    assert [attempt.code for attempt in result.fallback_attempts] == ["MISSING_API_KEY", "MISSING_API_KEY"]
 
 
 def test_diarize_auto_uses_openai_diarize_without_groq(monkeypatch, tmp_path):

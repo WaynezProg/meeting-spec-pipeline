@@ -168,6 +168,7 @@ MVP 測試可用 `mock` provider，不需要雲端 key。
 Backend fallback / cost rules：
 
 - 預設用 `provider=auto`：Groq `whisper-large-v3-turbo` 優先，失敗才 fallback 到 OpenAI `gpt-4o-mini-transcribe`，最後才用 `local`。
+- `local` fallback 建議串 Mac Mini STT queue wrapper：`uv run python skills/meeting-spec-pipeline/scripts/stt_queue_transcribe.py {audio_path} --language {language}`。
 - 指定 `--provider groq|openai|local|mock` 時只跑該 backend，不做自動 fallback。
 - 不要 clone 第三方 Groq Whisper repo；Groq / OpenAI 都走官方 `/audio/transcriptions` API。
 - Diarization 預設關閉。只有使用者明確需要講者分離，或會議輸出必須有 speaker labels，才加 `--diarize`，此時走 OpenAI diarize model，避免不必要成本。

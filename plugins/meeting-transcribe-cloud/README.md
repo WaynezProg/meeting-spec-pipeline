@@ -73,6 +73,12 @@ openclaw config set plugins.entries.meeting-transcribe-cloud.config '{
 openclaw config validate --json
 ```
 
-Fallback is only automatic for `provider=auto`: Groq first, OpenAI mini fallback, local last. Diarization stays off unless the user needs speaker separation.
+Fallback is only automatic for `provider=auto`: Groq first, OpenAI mini fallback, local last. The recommended `local.command` is the Mac Mini STT queue wrapper:
+
+```bash
+uv run python skills/meeting-spec-pipeline/scripts/stt_queue_transcribe.py {audio_path} --language {language}
+```
+
+The wrapper submits to `STT_BASE_URL` or `http://127.0.0.1:8787`, polls until `done`, and prints JSON to stdout for the existing local provider adapter. Diarization stays off unless the user needs speaker separation.
 
 The Skill controls workflow stages. This plugin only owns provider selection and credential references.

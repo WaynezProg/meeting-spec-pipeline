@@ -70,7 +70,7 @@ def test_secret_file_example_contains_only_placeholders():
     secrets = json.loads((PLUGIN / "config/meeting-transcribe-cloud.secrets.example.json").read_text())
     assert secrets["groq"]["apiKey"] == "replace-with-groq-api-key"
     assert secrets["openai"]["apiKey"] == "replace-with-openai-api-key"
-    assert secrets["local"]["command"] == "replace-with-local-whisper-command"
+    assert "stt_queue_transcribe.py {audio_path}" in secrets["local"]["command"]
 
 
 def test_install_helper_appends_plugin_without_overwriting_existing_config(tmp_path):
